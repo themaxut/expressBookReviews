@@ -21,20 +21,28 @@ public_users.post("/register", (req, res) => {
     return res.status(404).json({ message: "Unable to register user." });
 });
 
-//helper function to simulate asyn
-function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+function retrieveBooks() {
+    return new Promise((resolve, reject) => {
+        resolve(books);
+    });
 }
 
 // Get the book list available in the shop
-public_users.get("/", function (req, res) {
-    res.send(JSON.stringify(books, null, 4));
+public_users.get("/", async function (req, res) {
+    try {
+        const newBooks = await retrieveBooks();
+        res.send(JSON.stringify(newBooks, null, 4));
+    } catch (error) {
+        res.status(500).send({ message: "Error retrieving books" });
+    }
+    // res.send(JSON.stringify(await retrieveBooks(), null, 4));
 });
 
 // Get book details based on ISBN
-public_users.get("/isbn/:isbn", function (req, res) {
+public_users.get("/isbn/:isbn", async function (req, res) {
     const isbn = req.params.isbn;
-    const book = books[isbn];
+    const newBooks = await retrieveBooks();
+    const book = newBooks[isbn];
 
     if (book) {
         res.send(JSON.stringify(book, null, 4));
@@ -44,9 +52,10 @@ public_users.get("/isbn/:isbn", function (req, res) {
 });
 
 // Get book details based on author
-public_users.get("/author/:author", function (req, res) {
+public_users.get("/author/:author", async function (req, res) {
     const author = req.params.author;
-    let filteredBooks = Object.values(books).filter(
+    const newBooks = await retrieveBooks();
+    let filteredBooks = Object.values(newBooks).filter(
         (book) => book.author === author
     );
 
@@ -58,8 +67,9 @@ public_users.get("/author/:author", function (req, res) {
 });
 
 // Get all books based on title
-public_users.get("/title/:title", function (req, res) {
+public_users.get("/title/:title", async function (req, res) {
     const title = req.params.title;
+    const newBooks = await retrieveBooks();
     let filteredBooks = Object.values(books).filter(
         (book) => book.title === title
     );
